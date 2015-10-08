@@ -5,20 +5,31 @@ import {getMovementIn} from 'leap';
 
 const followMe = document.getElementById('follow-me');
 const imgContainer = document.getElementById('image-container');
-const img = document.getElementById('image');
-const rows = int(imgContainer.getAttribute('data-rows'));
-const cols = int(imgContainer.getAttribute('data-cols'));
+const imgEl = document.getElementById('image');
+const images = new Map();
+images.set('kickbox', {
+    cols: 22,
+    rows: 4,
+    file: 'img/kickbox.jpg'
+});
+images.set('school', {
+    cols: 22,
+    rows: 4,
+    file: 'img/school.jpg'
+});
+// TODO: Streamise this shizzle
+const img = images.get('kickbox');
 
 // TODO: Once this return's a promise make is Leap || Mouse
 const inputCoords$ = getMovementIn(imgContainer);
 //const inputCoords$ = Rx.Observable.
 //    fromEvent(followMe, 'mousemove', e => e, true).map(e => ({ x: e.offsetX, y: e.offsetY }));
 
-const rowsCols$ = new Rx.Subject().startWith({ rows, cols });
+const rowsCols$ = new Rx.Subject().startWith({ rows: img.rows, cols: img.cols });
 
-const imageDims$ = Rx.Observable.fromEvent(img, 'load').
+const imageDims$ = Rx.Observable.fromEvent(imgEl, 'load').
     map(e => ({ w: e.srcElement.width, h: e.srcElement.height }));
-img.src = img.getAttribute('data-src');
+imgEl.src = img.file;
 
 const containerSize$ = rowsCols$.combineLatest(imageDims$, (rowsCols, imageDims) =>
     ({ w: int(imageDims.w/rowsCols.cols), h: int(imageDims.h/rowsCols.rows) })
@@ -44,8 +55,8 @@ const imagePos$ = currentFrame$.combineLatest(rowsCols$, (frame, rowsCols) => {
 }));
 
 imagePos$.subscribe(pos => {
-    img.style.left = `-${pos.left}px`;
-    img.style.top = `-${pos.top}px`;
+    imgEl.style.left = `-${pos.left}px`;
+    imgEl.style.top = `-${pos.top}px`;
 });
 
 containerSize$.subscribe(size => {
